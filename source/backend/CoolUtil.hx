@@ -61,6 +61,28 @@ class CoolUtil
 		return newValue / tempMult;
 	}
 
+	#if linux
+	public static function sortAlphabetically(list:Array<String>):Array<String> {
+		// This moster here fixes order of scrips to match the windows implementation
+		// Why? because some people use this quirk (like me)
+
+		list.sort((a,b) -> { 
+				a = a.toUpperCase();
+				b = b.toUpperCase();
+			  
+				if (a < b) {
+				  return -1;
+				}
+				else if (a > b) {
+				  return 1;
+				} else {
+				  return 0;
+				}
+			  });
+		return list;
+	}
+	#end
+
 	inline public static function dominantColor(sprite:flixel.FlxSprite):Int
 	{
 		var countByColor:Map<Int, Int> = [];
@@ -162,10 +184,10 @@ class CoolUtil
 
 	public static function showPopUp(message:String, title:String):Void
 	{
-		#if android
+		/*#if android
 		AndroidTools.showAlertDialog(title, message, {name: "OK", func: null}, null);
-		#else
+		#else*/
 		FlxG.stage.window.alert(message, title);
-		#end
+		//#end
 	}
 }

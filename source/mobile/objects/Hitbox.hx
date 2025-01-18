@@ -1,29 +1,54 @@
+/*
+ * Copyright (C) 2025 Mobile Porting Team
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
+
 package mobile.objects;
 
 import openfl.display.BitmapData;
 import openfl.display.Shape;
 import flixel.graphics.FlxGraphic;
+import flixel.util.FlxSignal.FlxTypedSignal;
 import openfl.geom.Matrix;
 
 /**
  * A zone with 4 hint's (A hitbox).
  * It's really easy to customize the layout.
  *
- * @author: Mihai Alexandru and Karim Akra
+ * @author: Karim Akra and Lily Ross (mcagabe19)
  */
 class Hitbox extends MobileInputManager implements IMobileControls
 {
-	final offsetFir:Int = (ClientPrefs.data.hitbox2 ? Std.int(FlxG.height / 4) * 3 : 0);
-	final offsetSec:Int = (ClientPrefs.data.hitbox2 ? 0 : Std.int(FlxG.height / 4));
+	final offsetFir:Int = (ClientPrefs.data.hitboxPos ? Std.int(FlxG.height / 4) * 3 : 0);
+	final offsetSec:Int = (ClientPrefs.data.hitboxPos ? 0 : Std.int(FlxG.height / 4));
 
 	public var buttonLeft:TouchButton = new TouchButton(0, 0, [MobileInputID.HITBOX_LEFT, MobileInputID.NOTE_LEFT]);
 	public var buttonDown:TouchButton = new TouchButton(0, 0, [MobileInputID.HITBOX_DOWN, MobileInputID.NOTE_DOWN]);
 	public var buttonUp:TouchButton = new TouchButton(0, 0, [MobileInputID.HITBOX_UP, MobileInputID.NOTE_UP]);
 	public var buttonRight:TouchButton = new TouchButton(0, 0, [MobileInputID.HITBOX_RIGHT, MobileInputID.NOTE_RIGHT]);
-	public var buttonExtra:TouchButton = new TouchButton(0, 0);
-	public var buttonExtra2:TouchButton = new TouchButton(0, 0);
+	public var buttonExtra:TouchButton = new TouchButton(0, 0, [MobileInputID.EXTRA_1]);
+	public var buttonExtra2:TouchButton = new TouchButton(0, 0, [MobileInputID.EXTRA_2]);
 
 	public var instance:MobileInputManager;
+	public var onButtonDown:FlxTypedSignal<TouchButton->Void> = new FlxTypedSignal<TouchButton->Void>();
+	public var onButtonUp:FlxTypedSignal<TouchButton->Void> = new FlxTypedSignal<TouchButton->Void>();
 
 	var storedButtonsIDs:Map<String, Array<MobileInputID>> = new Map<String, Array<MobileInputID>>();
 
@@ -84,6 +109,8 @@ class Hitbox extends MobileInputManager implements IMobileControls
 	override function destroy()
 	{
 		super.destroy();
+		onButtonUp.destroy();
+		onButtonDown.destroy();
 
 		for (fieldName in Reflect.fields(this))
 		{
@@ -103,7 +130,7 @@ class Hitbox extends MobileInputManager implements IMobileControls
 		hint.label = new FlxSprite();
 		hint.labelStatusDiff = (ClientPrefs.data.hitboxType != "Hidden") ? ClientPrefs.data.controlsAlpha : 0.00001;
 		hint.label.loadGraphic(createHintGraphic(Width, Math.floor(Height * 0.035), true));
-		if (ClientPrefs.data.hitbox2)
+		if (ClientPrefs.data.hitboxPos)
 			hint.label.offset.y -= (hint.height - hint.label.height) / 2;
 		else
 			hint.label.offset.y += (hint.height - hint.label.height) / 2;
@@ -115,6 +142,8 @@ class Hitbox extends MobileInputManager implements IMobileControls
 
 			hint.onDown.callback = function()
 			{
+				onButtonDown.dispatch(hint);
+
 				if (hintTween != null)
 					hintTween.cancel();
 
@@ -134,6 +163,8 @@ class Hitbox extends MobileInputManager implements IMobileControls
 
 			hint.onOut.callback = hint.onUp.callback = function()
 			{
+				onButtonUp.dispatch(hint);
+
 				if (hintTween != null)
 					hintTween.cancel();
 
@@ -150,6 +181,11 @@ class Hitbox extends MobileInputManager implements IMobileControls
 					onComplete: (twn:FlxTween) -> hintTween = null
 				});
 			}
+		}
+		else
+		{
+			hint.onDown.callback = () -> onButtonDown.dispatch(hint);
+			hint.onOut.callback = hint.onUp.callback = () -> onButtonUp.dispatch(hint);
 		}
 
 		hint.immovable = hint.multiTouch = true;

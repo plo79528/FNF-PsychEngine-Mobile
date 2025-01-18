@@ -1,4 +1,28 @@
+/*
+ * Copyright (C) 2025 Mobile Porting Team
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
+
 package mobile.objects;
+
+import flixel.util.FlxSignal.FlxTypedSignal;
 
 /**
  * ...
@@ -41,10 +65,12 @@ class TouchPad extends MobileInputManager implements IMobileControls
 	public var buttonX:TouchButton = new TouchButton(0, 0, [MobileInputID.X]);
 	public var buttonY:TouchButton = new TouchButton(0, 0, [MobileInputID.Y]);
 	public var buttonZ:TouchButton = new TouchButton(0, 0, [MobileInputID.Z]);
-	public var buttonExtra:TouchButton = new TouchButton(0, 0);
-	public var buttonExtra2:TouchButton = new TouchButton(0, 0);
+	public var buttonExtra:TouchButton = new TouchButton(0, 0, [MobileInputID.EXTRA_1]);
+	public var buttonExtra2:TouchButton = new TouchButton(0, 0, [MobileInputID.EXTRA_2]);
 
 	public var instance:MobileInputManager;
+	public var onButtonDown:FlxTypedSignal<TouchButton->Void> = new FlxTypedSignal<TouchButton->Void>();
+	public var onButtonUp:FlxTypedSignal<TouchButton->Void> = new FlxTypedSignal<TouchButton->Void>();
 
 	/**
 	 * Create a gamepad.
@@ -59,7 +85,7 @@ class TouchPad extends MobileInputManager implements IMobileControls
 		if (DPad != "NONE")
 		{
 			if (!MobileData.dpadModes.exists(DPad))
-				throw 'The touchPad dpadMode "$DPad" doesn\'t exists.';
+				throw Language.getPhrase('touchpad_dpadmode_missing', 'The touchPad dpadMode "{1}" doesn\'t exist.', [DPad]);
 
 			for (buttonData in MobileData.dpadModes.get(DPad).buttons)
 			{
@@ -73,7 +99,7 @@ class TouchPad extends MobileInputManager implements IMobileControls
 		if (Action != "NONE")
 		{
 			if (!MobileData.actionModes.exists(Action))
-				throw 'The touchPad actionMode "$Action" doesn\'t exists.';
+				throw Language.getPhrase('touchpad_actionmode_missing', 'The touchPad actionMode "{1}" doesn\'t exist.', [DPad]);
 
 			for (buttonData in MobileData.actionModes.get(Action).buttons)
 			{
@@ -106,6 +132,8 @@ class TouchPad extends MobileInputManager implements IMobileControls
 	override public function destroy()
 	{
 		super.destroy();
+		onButtonUp.destroy();
+		onButtonDown.destroy();
 
 		for (fieldName in Reflect.fields(this))
 		{
@@ -127,9 +155,6 @@ class TouchPad extends MobileInputManager implements IMobileControls
 			var field = Reflect.field(this, button);
 			if (button.toLowerCase().contains('extra') && Std.isOfType(field, TouchButton))
 			{
-				// if (MobileData.save.data.extraData[int] == null)
-				// 	MobileData.save.data.extraData.push(FlxPoint.get(field.x, field.y));
-				// else
 				MobileData.save.data.extraData[int] = FlxPoint.get(field.x, field.y);
 				++int;
 			}
@@ -182,6 +207,9 @@ class TouchPad extends MobileInputManager implements IMobileControls
 		button.tag = Graphic.toUpperCase();
 		button.color = Color;
 		button.parentAlpha = button.alpha;
+
+		button.onDown.callback = () -> onButtonDown.dispatch(button);
+		button.onOut.callback = button.onUp.callback = () -> onButtonUp.dispatch(button);
 		return button;
 	}
 
