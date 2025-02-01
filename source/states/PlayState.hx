@@ -49,7 +49,10 @@ import psychlua.HScript;
 #end
 
 #if HSCRIPT_ALLOWED
+import psychlua.HScript.HScriptInfos;
 import crowplexus.iris.Iris;
+import crowplexus.hscript.Expr.Error as IrisError;
+import crowplexus.hscript.Printer;
 #end
 
 /**
@@ -701,7 +704,9 @@ class PlayState extends MusicBeatState
 		FlxG.animationTimeScale = value;
 		Conductor.offset = Reflect.hasField(PlayState.SONG, 'offset') ? (PlayState.SONG.offset / value) : 0;
 		Conductor.safeZoneOffset = (ClientPrefs.data.safeFrames / 60) * 1000 * value;
+		#if VIDEOS_ALLOWED
 		if(videoCutscene != null) videoCutscene.videoSprite.bitmap.rate = value;
+		#end
 		setOnScripts('playbackRate', playbackRate);
 		#else
 		playbackRate = 1.0; // ensuring -Crow
@@ -1596,7 +1601,9 @@ class PlayState extends MusicBeatState
 			}
 			FlxTimer.globalManager.forEach(function(tmr:FlxTimer) if(!tmr.finished) tmr.active = false);
 			FlxTween.globalManager.forEach(function(twn:FlxTween) if(!twn.finished) twn.active = false);
+			#if VIDEOS_ALLOWED
 			if(videoCutscene != null) videoCutscene.pause();
+			#end
 		}
 
 		super.openSubState(SubState);
@@ -1616,7 +1623,9 @@ class PlayState extends MusicBeatState
 			}
 			FlxTimer.globalManager.forEach(function(tmr:FlxTimer) if(!tmr.finished) tmr.active = true);
 			FlxTween.globalManager.forEach(function(twn:FlxTween) if(!twn.finished) twn.active = true);
+			#if VIDEOS_ALLOWED
 			if(videoCutscene != null) videoCutscene.resume();
+			#end
 
 			paused = false;
 			callOnScripts('onResume');
@@ -1629,7 +1638,9 @@ class PlayState extends MusicBeatState
 		if (!paused)
 		{
 			if (health > 0) resetRPC(Conductor.songPosition > 0.0);
+			#if VIDEOS_ALLOWED
 			if (videoCutscene != null) videoCutscene.resume();
+			#end
 		}
 		super.onFocus();
 	}
@@ -1641,7 +1652,10 @@ class PlayState extends MusicBeatState
 			#if DISCORD_ALLOWED
 			if (health > 0 && autoUpdateRPC) DiscordClient.changePresence(detailsPausedText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter());
 			#end
+
+			#if VIDEOS_ALLOWED
 			if (videoCutscene != null) videoCutscene.pause();
+			#end
 		}
 		super.onFocusLost();
 	}
@@ -3206,8 +3220,7 @@ class PlayState extends MusicBeatState
 		for (script in hscriptArray)
 			if(script != null)
 			{
-				var ny:Dynamic = script.get('onDestroy');
-				if(ny != null && Reflect.isFunction(ny)) ny();
+				if(script.exists('onDestroy')) script.call('onDestroy');
 				script.destroy();
 			}
 
@@ -3380,9 +3393,10 @@ class PlayState extends MusicBeatState
 			trace('initialized hscript interp successfully: $file');
 			hscriptArray.push(newScript);
 		}
-		catch(e:Dynamic)
+		catch(e:IrisError)
 		{
-			addTextToDebug('ERROR ON LOADING ($file) - $e', FlxColor.RED);
+			var pos:HScriptInfos = cast {fileName: file, showLine: false};
+			Iris.error(Printer.errorToString(e, false), pos);
 			var newScript:HScript = cast (Iris.instances.get(file), HScript);
 			if(newScript != null)
 				newScript.destroy();
@@ -3458,9 +3472,9 @@ class PlayState extends MusicBeatState
 			if(script == null || !script.exists(funcToCall) || exclusions.contains(script.origin))
 				continue;
 
-			try
+			var callValue = script.call(funcToCall, args);
+			if(callValue != null)
 			{
-				var callValue = script.call(funcToCall, args);
 				var myValue:Dynamic = callValue.returnValue;
 
 				if((myValue == LuaUtils.Function_StopHScript || myValue == LuaUtils.Function_StopAll) && !excludeValues.contains(myValue) && !ignoreStops)
@@ -3471,10 +3485,6 @@ class PlayState extends MusicBeatState
 
 				if(myValue != null && !excludeValues.contains(myValue))
 					returnVal = myValue;
-			}
-			catch(e:Dynamic)
-			{
-				addTextToDebug('ERROR (${script.origin}: $funcToCall) - $e', FlxColor.RED);
 			}
 		}
 		#end
