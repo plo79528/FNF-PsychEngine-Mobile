@@ -44,9 +44,13 @@ class FlashingState extends MusicBeatState
 			texts.add(button);
 		}
 
+		addTouchPad("NONE", "A_B");
+		touchPad.alpha = 0;
+
 		FlxTween.tween(texts, {alpha: 1.0}, 0.5, {
 			onComplete: (_) -> updateItems()
 		});
+		FlxTween.tween(touchPad, {alpha: 1.0}, 0.5);
 	}
 
 	override function update(elapsed:Float)

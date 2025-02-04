@@ -75,14 +75,6 @@ class Main extends Sprite
 	public function new()
 	{
 		super();
-
-		#if windows
-		// DPI Scaling fix for windows 
-		// this shouldn't be needed for other systems
-		// Credit to YoshiCrafter29 for finding this function
-		untyped __cpp__("SetProcessDPIAware();");
-		#end
-
 		#if mobile
 		#if android
 		StorageUtil.requestPermissions();
@@ -90,6 +82,13 @@ class Main extends Sprite
 		Sys.setCwd(StorageUtil.getStorageDirectory());
 		#end
 		backend.CrashHandler.init();
+
+		#if windows
+		// DPI Scaling fix for windows 
+		// this shouldn't be needed for other systems
+		// Credit to YoshiCrafter29 for finding this function
+		untyped __cpp__("SetProcessDPIAware();");
+		#end
 
 		#if VIDEOS_ALLOWED
 		hxvlc.util.Handle.init(#if (hxvlc >= "1.8.0")  ['--no-lua'] #end);
@@ -164,6 +163,11 @@ class Main extends Sprite
 		Controls.instance = new Controls();
 		ClientPrefs.loadDefaultKeys();
 		#if ACHIEVEMENTS_ALLOWED Achievements.load(); #end
+		#if mobile
+		FlxG.signals.postGameStart.addOnce(() -> {
+			FlxG.scaleMode = new MobileScaleMode();
+		});
+		#end
 		addChild(new FlxGame(game.width, game.height, #if COPYSTATE_ALLOWED !CopyState.checkExistingFiles() ? CopyState : #end game.initialState, game.framerate, game.framerate, game.skipSplash, game.startFullscreen));
 
 		fpsVar = new FPSCounter(10, 3, 0xFFFFFF);
@@ -201,8 +205,7 @@ class Main extends Sprite
 		#if android FlxG.android.preventDefaultKeys = [BACK]; #end
 
 		#if mobile
-		LimeSystem.allowScreenTimeout = ClientPrefs.data.screensaver; 		
-		FlxG.scaleMode = new MobileScaleMode();
+		LimeSystem.allowScreenTimeout = ClientPrefs.data.screensaver;
 		#end
 
 		// shader coords fix
