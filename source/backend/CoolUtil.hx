@@ -3,6 +3,9 @@ package backend;
 import openfl.utils.Assets;
 import lime.utils.Assets as LimeAssets;
 
+#if cpp
+@:cppFileCode('#include <thread>')
+#end
 class CoolUtil
 {
 	public static function checkForUpdates(url:String = null):String {
@@ -208,4 +211,14 @@ class CoolUtil
 		FlxG.stage.window.alert(message, title);
 		//#end
 	}
+
+	#if cpp
+    @:functionCode('
+        return std::thread::hardware_concurrency();
+    ')
+	#end
+    public static function getCPUThreadsCount():Int
+    {
+        return 1;
+    }
 }
