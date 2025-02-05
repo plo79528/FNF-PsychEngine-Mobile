@@ -79,6 +79,7 @@ class FlashingState extends MusicBeatState
 						FlxTween.tween(texts, {alpha: 0}, 0.2, {
 							onComplete: (_) -> MusicBeatState.switchState(new TitleState())
 						});
+						FlxTween.tween(touchPad, {alpha: 0}, 0.2);
 					});
 				});
 			} else {
