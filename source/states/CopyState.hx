@@ -66,8 +66,6 @@ class CopyState extends MusicBeatState
 			return;
 		}
 
-		trace(locatedFiles);
-
 		CoolUtil.showPopUp("Seems like you have some missing files that are necessary to run the game\nPress OK to begin the copy process", Language.getPhrase('mobile_notice', 'Notice!'));
 
 		shouldCopy = true;
@@ -88,10 +86,6 @@ class CopyState extends MusicBeatState
 		loadedText.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, CENTER);
 		add(loadedText);
 
-		var ticks:Int = 1;
-		if (maxLoopTimes <= 15)
-			ticks = 1;
-
 		thread = new ThreadPool(0, CoolUtil.getCPUThreadsCount(), MULTI_THREADED);
 		thread.doWork.add((poop) -> {
 			for (file in locatedFiles)
@@ -108,7 +102,6 @@ class CopyState extends MusicBeatState
 
 	override function update(elapsed:Float)
 	{
-		// trace(loopTimes);
 		if (shouldCopy)
 		{
 			loadingBar.percent = loopTimes / maxLoopTimes * 100;
