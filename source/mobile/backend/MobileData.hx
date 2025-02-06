@@ -117,7 +117,9 @@ class MobileData
 			buttonsInstance.buttonUp,
 			buttonsInstance.buttonRight])
 		{
-			button.color = button.label.color = data.arrowRGB[i][0];
+			button.color = data.arrowRGB[i][0];
+			button.label.color = data.arrowRGB[i][0];
+			button.label.updateColorTransform();
 		}
 
 		return buttonsInstance;
