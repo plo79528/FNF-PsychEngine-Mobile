@@ -563,7 +563,6 @@ class PlayState extends MusicBeatState
 		scoreTxt.scrollFactor.set();
 		scoreTxt.borderSize = 1.25;
 		scoreTxt.visible = !ClientPrefs.data.hideHud;
-		updateScore(false);
 		uiGroup.add(scoreTxt);
 
 		botplayTxt = new FlxText(400, healthBar.y - 90, FlxG.width - 800, Language.getPhrase("Botplay").toUpperCase(), 32);
@@ -630,7 +629,7 @@ class PlayState extends MusicBeatState
 		mobileControls.onButtonUp.add(onButtonRelease);
 
 		startCallback();
-		RecalculateRating();
+		RecalculateRating(false, false);
 
 		FlxG.stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyPress);
 		FlxG.stage.addEventListener(KeyboardEvent.KEY_UP, onKeyRelease);
@@ -1156,14 +1155,14 @@ class PlayState extends MusicBeatState
 	// `updateScore = function(miss:Bool = false) { ... }
 	// its like if it was a variable but its just a function!
 	// cool right? -Crow
-	public dynamic function updateScore(miss:Bool = false)
+	public dynamic function updateScore(miss:Bool = false, scoreBop:Bool = true)
 	{
 		var ret:Dynamic = callOnScripts('preUpdateScore', [miss], true);
 		if (ret == LuaUtils.Function_Stop)
 			return;
 
 		updateScoreText();
-		if (!miss && !cpuControlled)
+		if (!miss && !cpuControlled && scoreBop)
 			doScoreBop();
 
 		callOnScripts('onUpdateScore', [miss]);
@@ -3549,7 +3548,7 @@ class PlayState extends MusicBeatState
 	public var ratingName:String = '?';
 	public var ratingPercent:Float;
 	public var ratingFC:String;
-	public function RecalculateRating(badHit:Bool = false) {
+	public function RecalculateRating(badHit:Bool = false, scoreBop:Bool = true) {
 		setOnScripts('score', songScore);
 		setOnScripts('misses', songMisses);
 		setOnScripts('hits', songHits);
@@ -3582,7 +3581,7 @@ class PlayState extends MusicBeatState
 		setOnScripts('ratingFC', ratingFC);
 		setOnScripts('totalPlayed', totalPlayed);
 		setOnScripts('totalNotesHit', totalNotesHit);
-		updateScore(badHit); // score will only update after rating is calculated, if it's a badHit, it shouldn't bounce
+		updateScore(badHit, scoreBop); // score will only update after rating is calculated, if it's a badHit, it shouldn't bounce
 	}
 
 	#if ACHIEVEMENTS_ALLOWED
