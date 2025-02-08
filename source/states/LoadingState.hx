@@ -23,12 +23,6 @@ import sys.thread.Mutex;
 import objects.Note;
 import objects.NoteSplash;
 
-#if cpp
-@:headerCode('
-#include <iostream>
-#include <thread>
-')
-#end
 class LoadingState extends MusicBeatState
 {
 	public static var loaded:Int = 0;
@@ -737,15 +731,4 @@ class LoadingState extends MusicBeatState
 
 		return null;
 	}
-	
-	#if cpp
-	@:functionCode('
-		return std::thread::hardware_concurrency();
-    	')
-	@:noCompletion
-    	public static function getCPUThreadsCount():Int
-    	{
-        	return -1;
-    	}
-    	#end
 }
