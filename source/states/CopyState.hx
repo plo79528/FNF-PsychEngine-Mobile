@@ -87,15 +87,15 @@ class CopyState extends MusicBeatState
 		add(loadedText);
 
 		thread = new ThreadPool(0, CoolUtil.getCPUThreadsCount(), MULTI_THREADED);
-		thread.doWork.add((poop) -> {
-			for (file in locatedFiles)
-			{
-				copyAsset(file);
-				loopTimes++;
-			}
+		new FlxTimer().start(0.5, (tmr) -> {
+			thread.run(function(poop) {
+				for (file in locatedFiles)
+				{
+					copyAsset(file);
+					loopTimes++;
+				}
+			});
 		});
-
-		new FlxTimer().start(0.5, (tmr) -> thread.queue({}));
 
 		super.create();
 	}
@@ -108,6 +108,7 @@ class CopyState extends MusicBeatState
 			if (loopTimes >= maxLoopTimes && canUpdate)
 			{
 				canUpdate = false;
+				thread.cancel();
 
 				if (failedFiles.length > 0)
 				{
