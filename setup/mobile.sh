@@ -1,6 +1,6 @@
 #!/bin/bash
 cd ..
-echo Makking the main haxelib and setuping folder in same time..
+echo Making the main haxelib and setuping folder in same time..
 mkdir ~/haxelib && haxelib setup ~/haxelib
 echo Installing dependencies...
 echo This might take a few moments depending on your internet speed.
