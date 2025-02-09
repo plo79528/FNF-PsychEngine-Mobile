@@ -328,13 +328,12 @@ class LoadingState extends MusicBeatState
 	static var dontPreloadDefaultVoices:Bool = false;
 	static function _startPool()
 	{
-		threadPool = new FixedThreadPool(#if MULTITHREADED_LOADING #if cpp getCPUThreadsCount() #else 8 #end #else 1 #end);
+		threadPool = new FixedThreadPool(#if MULTITHREADED_LOADING CoolUtil.getCPUThreadsCount() #else 1 #end);
 	}
 
 	public static function prepareToSong()
 	{
-		threadPool = new FixedThreadPool(#if MULTITHREADED_LOADING CoolUtil.getCPUThreadsCount() #else 1 #end); // 10 threads are enough
-
+		_startPool();
 		imagesToPrepare = [];
 		soundsToPrepare = [];
 		musicToPrepare = [];
